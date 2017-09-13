@@ -1,7 +1,5 @@
 const rp = require('request-promise')
 
-var url = "http://127.0.0.1:50981/na-2018"
-
 const hackathons_eu = _ =>
 	rp('http://127.0.0.1:50981/eu-2018')
 	.then(function(body) {
