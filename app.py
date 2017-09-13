@@ -19,12 +19,14 @@ def request_stuff(season, events):
         if event_id in events:
             pass
         else:
-            link_tag = str(event_for.find_all('a'))
+            link_tag = event_for.find_all('a', href=True)
+            '''
             index = link_tag.find('"') +  1
             link = link_tag[index:]
             index = link.find('"')
             link = link[:index]
-            
+            '''
+            link = link_tag[0]['href']
             img_tag = (event_for.findAll('img'))
             backgroundImage = img_tag[0]['src']
             logo = img_tag[1]['src']
@@ -72,9 +74,9 @@ def request_stuff(season, events):
 @app.route('/')
 def index():
     us_event = {}
-    request_stuff("s" + year, us_event)
+    request_stuff("na-" + year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
+    request_stuff("eu-" + year, eu_event)
     event_all = {"us_event":us_event,"eu_event":eu_event}
     return jsonify(event_all)
 
@@ -91,30 +93,30 @@ def select_season(mlh_season):
 @app.route('/event/<string:mlh_event>/')
 def search_event(mlh_event):
     us_event = {}
-    request_stuff("s"+year, us_event)
+    request_stuff("na-"+year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
+    request_stuff("eu-" + year, eu_event)
     for evnt in us_event:
-        if urllib.unquote(mlh_event.lower()) == evnt.lower():
+        if urllib.parse.unquote(mlh_event.lower()) == evnt.lower():
             return jsonify(us_event[evnt])
         else:
             for i in eu_event:
-                if urllib.unquote(mlh_event.lower()) == i.lower():
+                if urllib.parse.unquote(mlh_event.lower()) == i.lower():
                     return jsonify(eu_event[i])
 
 @app.route('/search/<string:mlh_event>/<string:key_>/')
 
 def search_by_key(mlh_event, key_):
     us_event = {}
-    request_stuff("s"+year, us_event)
+    request_stuff("na-"+year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
+    request_stuff("eu-"+year, eu_event)
     for evnt in us_event:
-        if urllib.unquote(mlh_event.lower()) == evnt.lower():
+        if urllib.parse.unquote(mlh_event.lower()) == evnt.lower():
             return us_event[evnt][key_]
         else:
             for i in eu_event:
-                if urllib.unquote(mlh_event.lower()) == i.lower():
+                if urllib.parse.unquote(mlh_event.lower()) == i.lower():
                     return eu_event[i][key_]
 
 
