@@ -65,28 +65,29 @@ def request_stuff(season, events):
             event["name"] = event_head
             event["link"] = link
             event["id"] = event_id
-            events[event_head] = event
-            event["image_bg"] = backgroundImage
-            event["image_logo"] = logo
+            # event["image_bg"] = backgroundImage
+            # event["image_logo"] = logo
+            events.append(event)
+
 
     
 
 @app.route('/')
 def index():
-    us_event = {}
+    us_event = []
     request_stuff("na-" + year, us_event)
-    eu_event = {}
+    eu_event = []
     request_stuff("eu-" + year, eu_event)
-    event_all = {"us_event":us_event,"eu_event":eu_event}
+    event_all = { "data": { "us_events" : us_event, "eu_events": eu_event }}
     return jsonify(event_all)
 
 
 @app.route('/<string:mlh_season>/')
 def select_season(mlh_season):
-    events_all = {}
+    events_all = []
     while True:
         request_stuff(mlh_season, events_all)
-        return jsonify(events_all)
+        return jsonify({ "data" : { "events" : events_all }})
         # time to wait until refresh
         time.sleep(1800)
 

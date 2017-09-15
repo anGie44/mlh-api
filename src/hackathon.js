@@ -3,44 +3,40 @@ const lib = require('../lib/common')
 
 const events = mlh_season => (mlh_season.includes('all')
 	? hackathons_all()
-	: mlh_season.includes('na')
-		? hackathons_na()
-		: hackathons_eu()
-	.then(function(obj) {
-		var hackathon_data = [];
-		Object.keys(obj).forEach(function(key) {
-			var hthon = {
-				date: obj[key]['date'], 
-				location: obj[key]['location'],
-				link: obj[key]['link'],
-				name: obj[key]['name'],
-			};
-			hackathon_data.push(hthon);
-		});
-		return hackathon_data;
-	})
+	: hackathons(mlh_season)
+	.then(body => body)
 	)
-	
-const hackathons_eu = _ =>
-	rp('http://127.0.0.1:50981/eu-2018')
-	.then(function(body) {
-		var obj = JSON.parse(body);
-		return obj;
-	})
 
-const hackathons_na = _ =>
-	rp('http://127.0.0.1:50981/na-2018')
-	.then(function(body) {
-		var obj = JSON.parse(body);
-		return obj;
-	})
+const hackathons = season =>
+	rp('http://127.0.0.1:50981/' + season)
+	.then(body => JSON.parse(body).data.events.map(d => ({
+		name : d.name,
+		dateRange : d.date,
+		startDate : d.date.split(" ")[0] + ' ' + d.date.split(" ")[1].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		endDate : d.date.split(" ")[0] + ' ' +  d.date.split(" ")[3].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		where : d.location,
+		link : d.link
+	}))
+	)
 
 const hackathons_all = _ =>
 	rp('http://127.0.0.1:50981/')
-	.then(function(body) {
-		var obj = JSON.parse(body);
-		return obj;
-	})
+	.then(body => JSON.parse(body).data.eu_events.map(d => ({
+		name : d.name,
+		dateRange : d.date,
+		startDate : d.date.split(" ")[0] + ' ' + d.date.split(" ")[1].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		endDate : d.date.split(" ")[0] + ' ' +  d.date.split(" ")[3].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		where : d.location,
+		link : d.link
+	})).concat(JSON.parse(body).data.us_events.map(d => ({
+		name : d.name,
+		dateRange : d.date,
+		startDate : d.date.split(" ")[0] + ' ' + d.date.split(" ")[1].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		endDate : d.date.split(" ")[0] + ' ' +  d.date.split(" ")[3].replace(/\D/g, '') + ', ' + (new Date()).getFullYear(),
+		where : d.location,
+		link : d.link
+	})))
+	)
 
 const search = query => Promise.resolve(query)
 	.then(query => { query.search = query.search || ''; return query })
@@ -55,8 +51,7 @@ const search = query => Promise.resolve(query)
 	})
 
 module.exports = {
-	hackathons_eu,
-	hackathons_na,
+	hackathons,
 	hackathons_all,
 	events,
 	search,

@@ -4,6 +4,7 @@
 const rp = require('request-promise');
 const program = require('commander');
 const inquirer = require('inquirer');
+const chalk = require('chalk');
 const hackathons = require('../src/hackathon');
 const lib = require('../lib/common');
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
@@ -32,9 +33,9 @@ const pretty = function(obj, symb, pre, post) {
 const formats = {
 	'%sdate' : 'startDate',
 	'%edate' : 'endDate',
-	'%date' : 'date',
+	'%date_r' : 'dateRange',
 	'%hname' : 'name',
-	'%where' : 'location',
+	'%where' : 'where',
 	'%homepg' : 'link'
 };
 
@@ -69,15 +70,14 @@ var search = program.args.join(' ');
 
 const mlh_season = program.geography + '-' + program.year;
 
-process.stdout.write(`Season: ${mlh_season}. `)
+process.stdout.write(`Season: ${mlh_season}. \n`)
 
 /** Get Data **/
 
 
 hackathons.events(mlh_season).then(events => {
 	if (!search) {
-		console.log(events);
-		return [{name: program.year}]
+		return events
 	}
 	/* We have a search term and a month */
 	else if (search && program.month) {
@@ -104,7 +104,7 @@ hackathons.events(mlh_season).then(events => {
 		return events
 	}
 })
-.then(events => events.map(h => h.name))
+.then(events => events)
 .then(events => ({mlh_season, events, search}))
 .then(hackathons.search)
 .then(display_hackathonlist)
@@ -115,22 +115,19 @@ hackathons.events(mlh_season).then(events => {
 	console.log(err.message);
 });
 
-function display_hackathonlist(events) {
-	var hackathons = Object.keys(events).map(function(key) {
-		return [key, events[key]];
-	});
+function display_hackathonlist(hackathons) {
 	if (hackathons.length === 0) {
-		console.log('No hacakthons at this time!');
+		console.log('No hackathons at this time!');
 		return;
 	}
 
-	var display_list = hackathons.reduce(function(acc, hackathon) {
-		acc[hackathon.name + ': ' + hackathon.date +  ', ' + hackathon.location] = hackathon;
+	var display_list = hackathons.events.reduce(function(acc, hackathon) {
+		acc[hackathon.name] = hackathon;
 		return acc;
 	}, {});
 
 	if (program.list) {
-		if (typeof program.list === 'boolean') program.list = '%hname %date %where';
+		if (typeof program.list === 'boolean') program.list = '%hname %date_r %where';
 		for (var hackathon_key in display_list) {
 			display_hackathon_with_format(display_list[hackathon_key], program.list);
 		}
@@ -155,5 +152,10 @@ function display_hackathonlist(events) {
 }
 
 function display_hackathoninfo (hackathon) {
-	// console.log(hackathon);
+	console.log('	', 'Registration: [	]', '\n');
+	console.log('	', 'Start Date: ', chalk.green(hackathon.startDate), '\n');
+	console.log('	', 'End Date: ', chalk.green(hackathon.endDate), '\n');
+	console.log('	', 'Location: ', chalk.green(hackathon.where), '\n');
+	console.log('	', 'Home Page: ', chalk.underline.green(hackathon.link), '\n');
+
 }
