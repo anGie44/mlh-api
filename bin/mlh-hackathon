@@ -3,22 +3,157 @@
 'use strict';
 const rp = require('request-promise');
 const program = require('commander');
-const hackathons = require('../src/hackathon')
+const inquirer = require('inquirer');
+const hackathons = require('../src/hackathon');
+const lib = require('../lib/common');
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
+//////////// Helper Functions ///////////////////
+
+const display_hackathon_with_format = function(hackathon, format) {
+	for (var key in formats) {
+		format = format.replace(key, hackathon[formats[key]]);
+	}
+	console.log(format);
+} 
+
+const pretty = function(obj, symb, pre, post) {
+	if (!symb) symb = ':';
+	if (!pre) pre = '';
+	if (!post) post = '';
+	var res = '';
+	for (var key in obj) {
+		res += pre + ' ' + key + ' ' + symb + ' ' + obj[key] + ' ' + post + '\n'; 
+ 	}
+ 	return res;
+}
+
+///////////// Format Definitions //////////////////
+const formats = {
+	'%sdate' : 'startDate',
+	'%edate' : 'endDate',
+	'%date' : 'date',
+	'%hname' : 'name',
+	'%where' : 'location',
+	'%homepg' : 'link'
+};
 
 program 
 	.usage('[search query]')
-	.option('-g, --geography [geography]', 'Limit search to geograpy; us or eu')
+	.option('-g, --geography [geography]', 'Limit search to geograpy; na or eu')
+	.option('-c, --city [city]', 'Limit search to city of choice')
+	.option('-y, --year [year]', 'Limit search to year')
 	.option('-m, --month [month]', 'Specify month to search')
 	.option('--next', 'Next hackathon')
 	.option('-l, --list [format]', 'Print with format [%s]')
 	.on('--help', function() {
 		console.log(' Using --list:');
 		console.log('');
-		console.log('	$ mlh hackathon -m Sept -l %name %when');
+		console.log('	$ mlh hackathon -m Sept -l "%hname %sdate%edate"');
 		console.log('');
+		console.log(pretty(formats, '->', '		'));
 	})
 	.parse(process.argv);
 
+/** Get All Query Info **/
+if (program.geography) {
+	program.geography = program.geography.toLowerCase();
+}
+else {
+	program.geography = 'all'
+}
 
-if (program.geography) program.geography = program.geography.toLowerCase();
+if (!program.year) program.year = (new Date()).getFullYear() + 1;
+
+var search = program.args.join(' ');
+
+const mlh_season = program.geography + '-' + program.year;
+
+process.stdout.write(`Season: ${mlh_season}. `)
+
+/** Get Data **/
+
+
+hackathons.events(mlh_season).then(events => {
+	if (!search) {
+		console.log(events);
+		return [{name: program.year}]
+	}
+	/* We have a search term and a month */
+	else if (search && program.month) {
+		if (!program.city) {
+			console.log('Searching', program.month, '\n')
+			return [{name : program.month}]
+		}
+		else {
+			console.log('Searching', program.month, program.city, '\n')
+			return [{name : (program.month, program.city)}]
+		}
+	}
+	/* Show entire month */
+	else if (!search && program.month) {
+		if (program.city) {
+			return [{name: (program.month, program.city)}]
+		}
+		else {
+			return [{name: program.month}]
+		}
+	}
+	else if ((search && !program.month) || (search && !program.city)) {
+		console.log('Searching', events.length, 'hackathons', '\n')
+		return events
+	}
+})
+.then(events => events.map(h => h.name))
+.then(events => ({mlh_season, events, search}))
+.then(hackathons.search)
+.then(display_hackathonlist)
+.catch(err => {
+	console.log("Hackathon events not available. 😞");
+	console.log("Try running npm update -g mlh.");
+	console.log("If that doesn't fix it, https://github.com/anGie44/mlh-api/issues")
+	console.log(err.message);
+});
+
+function display_hackathonlist(events) {
+	var hackathons = Object.keys(events).map(function(key) {
+		return [key, events[key]];
+	});
+	if (hackathons.length === 0) {
+		console.log('No hacakthons at this time!');
+		return;
+	}
+
+	var display_list = hackathons.reduce(function(acc, hackathon) {
+		acc[hackathon.name + ': ' + hackathon.date +  ', ' + hackathon.location] = hackathon;
+		return acc;
+	}, {});
+
+	if (program.list) {
+		if (typeof program.list === 'boolean') program.list = '%hname %date %where';
+		for (var hackathon_key in display_list) {
+			display_hackathon_with_format(display_list[hackathon_key], program.list);
+		}
+	}
+
+	else {
+		inquirer.prompt([
+			{ type : 'autocomplete',
+			  message: 'Info for:',
+			  name: 'hackathon',
+			  source: (answers, input) => {
+			  	const choices = Object.keys(display_list)
+			  		.filter(lib.filter_on(input))
+			  	return Promise.resolve(choices)
+			  }
+
+		}])
+		.then(answers => {
+			display_hackathoninfo(display_list[answers.hackathon]);
+		});
+	}
+}
+
+function display_hackathoninfo (hackathon) {
+	// console.log(hackathon);
+}

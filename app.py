@@ -6,7 +6,7 @@ import urllib
 import datetime
 
 app = Flask(__name__)
-year = str(datetime.date.today().year)
+year = str(datetime.date.today().year+1)
 
 def request_stuff(season, events):
     mlh_url = "https://mlh.io/seasons/%s/events" % (season)
