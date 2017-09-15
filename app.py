@@ -11,7 +11,7 @@ year = str(datetime.date.today().year)
 def request_stuff(season, events):
     mlh_url = "https://mlh.io/seasons/%s/events" % (season)
     mlh_html = requests.get(mlh_url)
-    soup = BeautifulSoup(mlh_html.content)
+    soup = BeautifulSoup(mlh_html.content, "html5lib")
     event_list = soup.find_all('div', {'class':'col-lg-3'})
     for event_for in event_list:
         event_id = str(event_for)

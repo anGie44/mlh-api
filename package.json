@@ -1,0 +1,27 @@
+{
+  "name": "mlh",
+  "version": "1.0.0",
+  "description": "A command-line tool for viewing ongoing mlh-sponsored hackathons",
+  "main": "src/index.js",
+  "bin": {
+    "mlh": "./bin/mlh"
+  },
+  "scripts": {
+    "test": "mlh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anGie44/mlh-api.git"
+  },
+  "author": "anGie44",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anGie44/mlh-api/issues"
+  },
+  "homepage": "https://github.com/anGie44/mlh-api#readme",
+  "dependencies": {
+    "commander": "^2.11.0",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1"
+  }
+}

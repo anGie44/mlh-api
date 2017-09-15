@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+'use strict';
+const rp = require('request-promise');
+const program = require('commander');
+const hackathons = require('../src/hackathon')
+
+
+program 
+	.usage('[search query]')
+	.option('-g, --geography [geography]', 'Limit search to geograpy; us or eu')
+	.option('-m, --month [month]', 'Specify month to search')
+	.option('--next', 'Next hackathon')
+	// .option('-l, --list [format]', 'Print with format [%s]')
+	// .on('--help', function() {
+	// 	console.log(' Using --list:');
+	// 	console.log('');
+	// 	console.log('	$ mlh hackathon -m Sept -l %name %when');
+	// 	console.log('');
+	// })
+	.parse(process.argv);
+
+
+if (program.geography) program.geography = program.geography.toLowerCase();
+console.log(program.geography);

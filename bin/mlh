@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+
+program
+	.command('hackathon [search]', 'search for hackathon info')
+
+program.parse(process.argv);
+
+
+
